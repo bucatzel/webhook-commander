@@ -1,0 +1,29 @@
+{
+  "port": 9000,
+  "github": {
+		"path": "/webhook",
+		"secret": "***"
+  },
+  "newrelic": {
+		"apiKey": "xxxx",
+		"applicationID": "nnn"
+  },
+  "slack":{
+		"webhookUrl":" https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
+		"channel":"channel",
+		"username": "slack username"
+  },
+  "log": "./webhook.log",
+  "rules": [
+	{
+		"event": "push",
+		"reponame": "reponame",
+		"ref": "refs/heads/master",
+		"commands": [
+			"cd /var/log && ls -la",
+			"cd /mnt && ls",
+		]
+    }
+  ]
+
+}

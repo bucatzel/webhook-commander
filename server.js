@@ -128,7 +128,7 @@
 
 	function executeCmd(command) {
 		return new Promise((resolve, reject) => {
-			exec(command, (error, stdout, stderr) => {
+            exec(command,{ maxBuffer: 1024 * 1024 * 10},(error, stdout, stderr) => {
 				logStream.write(command + '\n');
 				console.log(command);
 			if (error) {

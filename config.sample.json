@@ -4,6 +4,7 @@
             "path": "/webhook",
             "secret": "***"
     },
+    "log": "./webhook.log",
     "newrelic": {
             "use":false,
             "apiKey": "xxxx",
@@ -25,28 +26,27 @@
     },
     "skype": {
             "use":false,
-            "hostname": "xxxx",
+            "hostname": "xxxx"
     },
     "slack":{
             "use":false,
-            "webhookUrl":" https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
+            "webhookUrl":"https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
             "channel":"channel",
             "username": "slack username"
     },
-    "log": "./webhook.log",
     "shipit": {
         "use":false,
         "config": {
             "default": {
-            "workspace": '/tmp/myapp',
-            "deployTo": '/var/myapp',
-            "repositoryUrl": 'https://github.com/user/myapp.git',
-            "ignores": ['.git', 'node_modules'],
+            "workspace": "/tmp/myapp",
+            "deployTo": "/var/myapp",
+            "repositoryUrl": "https://github.com/user/myapp.git",
+            "ignores": [".git", "node_modules"],
             "keepReleases": 5,
             "deleteOnRollback": false,
-            "key": '/path/to/key',
-            "shallowClone": true,
-            },
+            "key": "/path/to/key",
+            "shallowClone": true
+            }
         }
     }
 }

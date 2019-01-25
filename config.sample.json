@@ -1,29 +1,52 @@
 {
-  "port": 9000,
-  "github": {
-		"path": "/webhook",
-		"secret": "***"
-  },
-  "newrelic": {
-		"apiKey": "xxxx",
-		"applicationID": "nnn"
-  },
-  "slack":{
-		"webhookUrl":" https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
-		"channel":"channel",
-		"username": "slack username"
-  },
-  "log": "./webhook.log",
-  "rules": [
-	{
-		"event": "push",
-		"reponame": "reponame",
-		"ref": "refs/heads/master",
-		"commands": [
-			"cd /var/log && ls -la",
-			"cd /mnt && ls",
-		]
+    "port": 9000,
+    "github": {
+            "path": "/webhook",
+            "secret": "***"
+    },
+    "newrelic": {
+            "use":false,
+            "apiKey": "xxxx",
+            "applicationID": "nnn"
+    },
+    "mail": {
+            "use":false,
+            "credentials":{
+                "host": "smtp.example.com",
+                "port": 587,
+                "secure": false,
+                "auth": {
+                    "user": "username",
+                    "pass": "password"
+                }
+            },
+            "from": "from",
+            "to":""
+    },
+    "skype": {
+            "use":false,
+            "hostname": "xxxx",
+    },
+    "slack":{
+            "use":false,
+            "webhookUrl":" https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX",
+            "channel":"channel",
+            "username": "slack username"
+    },
+    "log": "./webhook.log",
+    "shipit": {
+        "use":false,
+        "config": {
+            "default": {
+            "workspace": '/tmp/myapp',
+            "deployTo": '/var/myapp',
+            "repositoryUrl": 'https://github.com/user/myapp.git',
+            "ignores": ['.git', 'node_modules'],
+            "keepReleases": 5,
+            "deleteOnRollback": false,
+            "key": '/path/to/key',
+            "shallowClone": true,
+            },
+        }
     }
-  ]
-
 }

@@ -1,0 +1,15 @@
+{
+  "rules": [
+	{
+		"event": "push",
+		"reponame": "reponame",
+		"ref": "refs/heads/master",
+		"precommands": [
+			"cd /var/log && ls -la",
+			"cd /mnt && ls",
+		],
+		"deploy": false
+    }
+  ]
+
+}

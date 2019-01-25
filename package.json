@@ -1,6 +1,6 @@
 {
   "name": "webhook-commander",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "",
   "main": "server.js",
   "scripts": {
@@ -14,6 +14,9 @@
     "express": "^4.15.3",
     "express-github-webhook": "^1.0.6",
     "node-rest-client": "^3.1.0",
+    "nodemailer": "^5.1.1",
+    "shipit-cli": "^4.1.2",
+    "skype-web-api": "^0.3.5",
     "slack-node": "^0.1.8",
     "split2": "^2.1.1"
   }

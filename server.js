@@ -1,28 +1,50 @@
-	var options = require('./config.prod.json');
+	var config = require('./config.json');
+	var commands = require('./commands.json');
 	var express = require('express');
 	var bodyParser = require('body-parser');
 	var Client = require('node-rest-client').Client;
 	var client = new Client();
 	var async = require('async');
 	var fs            = require('fs');
-	var logStream = options.log && fs.createWriteStream(options.log);
+	var logStream = config.log && fs.createWriteStream(config.log);
 	const exec = require('child_process').exec;
 
 	var GithubWebHook = require('express-github-webhook');
-	var webhookHandler = GithubWebHook({ path: options.github.path, secret: options.github.secret });
+	var webhookHandler = GithubWebHook({ path: config.github.path, secret: config.github.secret });
 
-	var Slack = require('slack-node');
-	var slack = new Slack();
+	if(config.slack.use){
+        var Slack = require('slack-node');
+        var slack = new Slack();
+		slack.setWebhook(config.slack.webhookUrl);
+    }
 
+	if(config.skype.use){
+        var SkypeWebApi = require('skype-web-api')
+        const skypeApi = new SkypeWebApi();
+    }
+
+	if(config.mail.use){
+        const nodemailer = require("nodemailer");
+        let transporter = nodemailer.createTransport(config.mail.credentials)
+    }
+	if(config.shipit.use){
+        let deploy = require("./shipit.js")
+
+    }
 	var queueReq = {};
 
-	options.rules.forEach(function(rule){
+	commands.rules.forEach(function(rule){
 		queueReq[rule.reponame] = async.queue(function(data, callback) {
 			data.timeStarted = Date.now();
 			beforeMsg(data);
-			var promises = rule.commands.map(function(command){
+			var promises = rule.precommands.map(function(command){
 				return executeCmd(command);
 			});
+            if(rule.deploy){
+                promises.push(function(deploy){
+				return deploy;
+			});
+            }
 
 			Promise.all(promises)
 			.then(function() {
@@ -44,8 +66,8 @@
 
 	// use in your express app
 	let app = express();
-	app.set('port', options.port || 9000);
-	app.set('rules', options.rules || {});
+	app.set('port', config.port || 9000);
+	app.set('rules', commands.rules || {});
 	app.listen(app.get('port'));
 
 	app.use(bodyParser.json()); // must use bodyParser in express
@@ -53,15 +75,15 @@
 
 	// Now could handle following events
 	webhookHandler.on('*', function (event, repo, data){
-		options.rules.forEach(function(rule){
+		commands.rules.forEach(function(rule){
 			if(event === rule.event && repo === rule.reponame && data.ref === rule.ref){
-				console.log('Starting deploy triggered by ' + data.commits[0].author.name);
+				console.log('Starting event triggered by ' + data.commits[0].author.name);
 				data.timeReceived = Date.now();
 				queueReq[rule.reponame].push(data, function (err) {
 					if(err){
 						console.error("webhookHandler queue error: ", err);
 					}
-					console.log('Finished deploy triggered by ' + data.commits[0].author.name);
+					console.log('Finished event triggered by ' + data.commits[0].author.name);
 				});
 			} else {
 				console.log("webhookHandler not covered by rules: ", event, repo, data.ref);
@@ -86,7 +108,7 @@
 	}
 
 	function newrelicMsg (data, message) {
-		if(options.newrelic.applicationID.length > 0){
+		if(config.newrelic.applicationID.length > 0){
 			var args = {
 			data: {
 				"deployment": {
@@ -98,11 +120,11 @@
 				},
 				headers: {
 					"Content-Type": "application/json",
-					"X-Api-Key":options.newrelic.apiKey
+					"X-Api-Key":config.newrelic.apiKey
 				}
 			};
 
-			client.post("https://api.newrelic.com/v2/applications/" + options.newrelic.applicationID + "/deployments.json", args, function (data, response) {
+			client.post("https://api.newrelic.com/v2/applications/" + config.newrelic.applicationID + "/deployments.json", args, function (data, response) {
 				// parsed response body as js object
 				//console.log(data);
 				// raw response
@@ -112,17 +134,34 @@
 	}
 
 	function slackMsg (data) {
-		if(options.slack.webhookUrl.length > 0){
-
-			slack.setWebhook(options.slack.webhookUrl);
+		if(config.slack.use){
 
 			slack.webhook({
-					channel: options.slack.channel,
-					username: options.slack.username,
-					text: "`" + data.commits[0].id.substr(0,6) + "` by " + data.commits[0].author.name + "\n ```" + data.commits[0].message + "``` deployed"
+					channel: config.slack.channel,
+					username: config.slack.username,
+					text: "`" + data.commits[0].id.substr(0,6) + "` by " + data.commits[0].author.name + "\n ```" + data.commits[0].message + "``` processed"
 				}, function(err, response) {
-				//console.log(response);
 			});
+		}
+	}
+
+	function skypeMsg (data) {
+		if(config.skype.use){
+			//text: "`" + data.commits[0].id.substr(0,6) + "` by " + data.commits[0].author.name + "\n ```" + data.commits[0].message + "``` processed"
+		}
+	}
+
+	function mailMsg (data) {
+		if(config.mail.use){
+            var message = {
+                from: config.mail.from,
+                to: config.mail.to,
+                subject: "Message title",
+                text: "`" + data.commits[0].id.substr(0,6) + "` by " + data.commits[0].author.name + "\n ```" + data.commits[0].message + "``` processed",
+                html: "<p>HTML version of the message</p>"
+            };
+            transporter.sendMail(message);
+			//text:
 		}
 	}
 

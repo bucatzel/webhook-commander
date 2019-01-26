@@ -6,7 +6,8 @@
 		"ref": "refs/heads/master",
 		"precommands": [
 			"cd /var/log && ls -la",
-			"cd /mnt && ls"
+			"cd /mnt && ls",
+            "node node_modules/.bin/shipit staging deploy"
 		],
 		"deploy": false
     }

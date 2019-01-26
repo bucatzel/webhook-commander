@@ -40,11 +40,6 @@
 			var promises = rule.precommands.map(function(command){
 				return executeCmd(command);
 			});
-            if(rule.deploy){
-                promises.push(function(deploy){
-				return deploy;
-			});
-            }
 
 			Promise.all(promises)
 			.then(function() {

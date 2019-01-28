@@ -27,10 +27,6 @@
         const nodemailer = require("nodemailer");
         let transporter = nodemailer.createTransport(config.mail.credentials)
     }
-	if(config.shipit.use){
-        let deploy = require("./shipit.js")
-
-    }
 	var queueReq = {};
 
 	commands.rules.forEach(function(rule){

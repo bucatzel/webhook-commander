@@ -46,7 +46,7 @@ commands.rules.forEach(function (rule) {
             deployCmdList = deployCmdList.concat(deployInit(deployPaths));
             deployCmdList = deployCmdList.concat(deployCheckout(deployPaths, data));
             deployCmdList = deployCmdList.concat(deployPrepare(deployPaths, rule.deploycommands));
-            deployCmdList = deployCmdList.concat(deploySwitch(deployPaths));
+            deployCmdList = deployCmdList.concat(deploySwitch(deployPaths, rule));
         }
         var syncCommands = deployCmdList.map(function (command) {
             return execSync(command);

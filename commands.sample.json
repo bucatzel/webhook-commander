@@ -2,9 +2,10 @@
   "rules": [
     {
       "event": "push",
-      "reponame": "reponame",
-      "deployTo": "/var/myapp",
       "ref": "refs/heads/master",
+      "reponame": "reponame",
+      "workspace": "/tmp/myapp",
+      "deployTo": "/var/myapp",
       "precommands": [
         "cd /var/log && ls -la",
         "cd /mnt && ls"

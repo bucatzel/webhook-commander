@@ -36,7 +36,6 @@
   },
   "deploy": {
     "use": false,
-    "workspace": "/tmp/myapp",
     "repository": "git@github.com:user/myapp.git",
     "exclude": [
       ".git",

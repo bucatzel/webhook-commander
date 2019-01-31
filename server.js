@@ -6,6 +6,7 @@ var Client = require('node-rest-client').Client;
 var client = new Client();
 var async = require('async');
 var fs = require('fs');
+var path = require('path');
 var logStream = config.log && fs.createWriteStream(config.log);
 const exec = require('child_process').exec;
 var rimraf = require('rimraf');
@@ -36,10 +37,15 @@ commands.rules.forEach(function (rule) {
         beforeMsg(data);
         let commandsList = rule.precommands;
         if (rule.deploy) {
-            commandsList.concat(deployInit());
-            commandsList.concat(deployCheckout());
-            commandsList.concat(deployPrepare(rule.deploycommands));
-            commandsList.concat(deploySwitch());
+            let deployPaths = {
+                repoDir: path.join(rule.workspace, 'repo'),
+                releaseDir: path.join(rule.workspace, 'releases'),
+                nextReleaseDir: path.join(rule.workspace, 'releases', data.timeStarted)
+            };
+            commandsList.concat(deployInit(deployPaths));
+            commandsList.concat(deployCheckout(deployPaths, data));
+            commandsList.concat(deployPrepare(deployPaths, rule.deploycommands));
+            commandsList.concat(deploySwitch(deployPaths));
         }
         commandsList.concat(rule.postcommands);
         var promises = commandsList.map(function (command) {
@@ -49,7 +55,7 @@ commands.rules.forEach(function (rule) {
         Promise.all(promises)
             .then(function () {
                 // All tasks are done now
-                deployCleanup();
+                deployCleanup(deployPaths);
 
                 afterMsg(data);
 
@@ -167,37 +173,35 @@ function mailMsg(data) {
     }
 }
 
-function deployInit {
+function deployInit(deployPaths ) {
     let a = [];
     if (config.deploy.use) {
-        a.push("mkdir -p " + path.join(config.deploy.workspace, 'repo'));
-        a.push("mkdir -p " + path.join(config.deploy.workspace, 'releases'));
+        a.push("mkdir -p " + deployPaths.repoDir);
+        a.push("mkdir -p " + deployPaths.nextReleaseDir);
     }
     return a;
 }
 
-function deployCheckout(data) {
+function deployCheckout(deployPaths, data) {
     let a = [];
     if (config.deploy.use) {
-        if (!fs.existsSync(path.join(config.deploy.workspace, 'repo', '.git'))) {
-            a.push("git clone " + config.deploy.repository + "");
+        if (!fs.existsSync(path.join(deployPaths.repoDir, '.git'))) {
+            a.push("git clone " + config.deploy.repository + " " + deployPaths.repoDir);
         }
-        a.push("cd  " + config.deploy.repository + " && git checkout " + data.commits[0].id);
-        a.push("mkdir -p " + path.join(config.deploy.workspace, 'releases', data.timeStarted));
+        a.push("cd  " + deployPaths.repoDir + " && git checkout " + data.commits[0].id);
         a.push("rsync -avhe " + config.deploy.exclude.map(function (item) {
             return " --exclude " + item
-        }) + " " + config.deploy.repository + " " + path.join(config.deploy.workspace, 'releases', data.timeStarted));
+        }) + " " + deployPaths.repoDir + " " + deployPaths.nextReleaseDir);
     }
     return a;
 }
 
-function deployPrepare(commands) {
+function deployPrepare(deployPaths, commands) {
     let a = [];
     if (config.deploy.use) {
         if (commands.length) {
-            let release_folder = path.join(config.deploy.workspace, 'releases', data.timeStarted);
             a = commands.map(function (command) {
-                return "cd  " + release_folder + " && " + command;
+                return "cd  " + deployPaths.nextReleaseDir + " && " + command;
             });
 
         }
@@ -205,22 +209,25 @@ function deployPrepare(commands) {
     return a;
 }
 
-function deploySwitch(rule) {
+function deploySwitch(deployPaths, rule) {
     let a = [];
-    a.push("ln -s " + path.join(config.deploy.workspace, 'releases', data.timeStarted) + " " + rule.deployTo)
+    a.push("ln -s " + deployPaths.nextReleaseDir + " " + rule.deployTo)
     return a;
 }
 
-function deployCleanup {
-    fs.readdir(path.join(config.deploy.workspace, 'releases'), (error, folders) => {
+function deployCleanup(deployPaths) {
+    fs.readdir(deployPaths.releaseDir, (error, folders) => {
         if (folders.length > config.deploy.keepReleases) {
             //delete the oldest
-            rimraf(path.join(config.deploy.workspace, 'releases', Math.min.apply(null, folders)), function (e) {
+            let oldestReleaseDir = path.join(deployPaths.nextReleaseDir, Math.min.apply(null, folders));
+            if (fs.existsSync(oldestReleaseDir)) {
+                rimraf(oldestReleaseDir, function (e) {
 
-                console.log(e);
-                console.log('Older release folder deleted');
+                    console.log(e);
+                    console.log('Older release folder deleted');
 
-            });
+                });
+            }
         }
 
     });

@@ -9,6 +9,7 @@ var fs = require('fs');
 var path = require('path');
 var logStream = config.log && fs.createWriteStream(config.log);
 const exec = require('child_process').exec;
+const execSync = require('child_process').execSync;
 var rimraf = require('rimraf');
 
 var GithubWebHook = require('express-github-webhook');
@@ -33,40 +34,45 @@ var queueReq = {};
 
 commands.rules.forEach(function (rule) {
     queueReq[rule.reponame] = async.queue(function (data, callback) {
-        data.timeStarted = Date.now();
+        data.timeStarted = Date.now().toString();
         beforeMsg(data);
-        let commandsList = rule.precommands;
+        let deployCmdList = rule.precommands;
         if (rule.deploy) {
             let deployPaths = {
                 repoDir: path.join(rule.workspace, 'repo'),
                 releaseDir: path.join(rule.workspace, 'releases'),
                 nextReleaseDir: path.join(rule.workspace, 'releases', data.timeStarted)
             };
-            commandsList.concat(deployInit(deployPaths));
-            commandsList.concat(deployCheckout(deployPaths, data));
-            commandsList.concat(deployPrepare(deployPaths, rule.deploycommands));
-            commandsList.concat(deploySwitch(deployPaths));
+            deployCmdList = deployCmdList.concat(deployInit(deployPaths));
+            deployCmdList = deployCmdList.concat(deployCheckout(deployPaths, data));
+            deployCmdList = deployCmdList.concat(deployPrepare(deployPaths, rule.deploycommands));
+            deployCmdList = deployCmdList.concat(deploySwitch(deployPaths));
         }
-        commandsList.concat(rule.postcommands);
-        var promises = commandsList.map(function (command) {
-            return executeCmd(command);
+        var syncCommands = deployCmdList.map(function (command) {
+            return execSync(command);
         });
 
-        Promise.all(promises)
-            .then(function () {
-                // All tasks are done now
-                deployCleanup(deployPaths);
-
-                afterMsg(data);
-
-                //Log stats
-                logStream.write('Waited to start ' + (data.timeStarted - data.timeReceived) + ' ms\n');
-                logStream.write('Processed in    ' + (Date.now() - data.timeStarted) / 1000 + ' s\n');
-                logStream.write('Total time      ' + (Date.now() - data.timeReceived) / 1000 + ' s\n');
-
-                callback();
-            })
-            .catch(console.error);
+        deployCmdList = deployCmdList.concat(rule.postcommands);
+        //
+        // var promises = deployCmdList.map(function (command) {
+        //     return executeCmd(command);
+        // });
+        //
+        // Promise.all(promises)
+        //     .then(function () {
+        //         // All tasks are done now
+        //         deployCleanup(deployPaths);
+        //
+        //         afterMsg(data);
+        //
+        //         //Log stats
+        //         logStream.write('Waited to start ' + (data.timeStarted - data.timeReceived) + ' ms\n');
+        //         logStream.write('Processed in    ' + (Date.now() - data.timeStarted) / 1000 + ' s\n');
+        //         logStream.write('Total time      ' + (Date.now() - data.timeReceived) / 1000 + ' s\n');
+        //
+        //         callback();
+        //     })
+        //     .catch(console.error);
 
     }, 1);
 });

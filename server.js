@@ -49,6 +49,7 @@ commands.rules.forEach(function (rule) {
             deployCmdList = deployCmdList.concat(deploySwitch(deployPaths, rule));
         }
         var syncCommands = deployCmdList.map(function (command) {
+            console.log(command);
             return execSync(command);
         });
 
@@ -195,9 +196,9 @@ function deployCheckout(deployPaths, data) {
             a.push("git clone " + config.deploy.repository + " " + deployPaths.repoDir);
         }
         a.push("cd  " + deployPaths.repoDir + " && git checkout " + data.commits[0].id);
-        a.push("rsync -avhe " + config.deploy.exclude.map(function (item) {
-            return " --exclude " + path.join(deployPaths.repoDir, item)
-        }) + " " + deployPaths.repoDir + " " + deployPaths.nextReleaseDir);
+        a.push("rsync -avh " + config.deploy.exclude.map(function (item) {
+            return " --exclude " + item
+        }).join(' ') + " " + deployPaths.repoDir + " " + deployPaths.nextReleaseDir);
     }
     return a;
 }
@@ -217,7 +218,11 @@ function deployPrepare(deployPaths, commands) {
 
 function deploySwitch(deployPaths, rule) {
     let a = [];
-    a.push("ln -s " + deployPaths.nextReleaseDir + " " + rule.deployTo)
+    if (fs.existsSync(rule.deployTo)) {
+        a.push("ln -s " + deployPaths.nextReleaseDir + " " + rule.deployTo)
+    } else {
+        a.push("ln -sfn " + deployPaths.nextReleaseDir + " " + rule.deployTo)
+    }
     return a;
 }
 

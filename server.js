@@ -39,9 +39,9 @@ commands.rules.forEach(function (rule) {
         let deployCmdList = rule.precommands;
         if (rule.deploy) {
             let deployPaths = {
-                repoDir: path.join(rule.workspace, 'repo'),
-                releaseDir: path.join(rule.workspace, 'releases'),
-                nextReleaseDir: path.join(rule.workspace, 'releases', data.timeStarted)
+                repoDir: path.join(rule.workspace, 'repo', '/'),
+                releaseDir: path.join(rule.workspace, 'releases', '/'),
+                nextReleaseDir: path.join(rule.workspace, 'releases', data.timeStarted, '/')
             };
             deployCmdList = deployCmdList.concat(deployInit(deployPaths));
             deployCmdList = deployCmdList.concat(deployCheckout(deployPaths, data));
@@ -196,7 +196,7 @@ function deployCheckout(deployPaths, data) {
         }
         a.push("cd  " + deployPaths.repoDir + " && git checkout " + data.commits[0].id);
         a.push("rsync -avhe " + config.deploy.exclude.map(function (item) {
-            return " --exclude " + item
+            return " --exclude " + path.join(deployPaths.repoDir, item)
         }) + " " + deployPaths.repoDir + " " + deployPaths.nextReleaseDir);
     }
     return a;

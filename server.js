@@ -41,19 +41,21 @@ commands.rules.forEach(function (rule) {
             let deployPaths = {
                 repoDir: path.join(rule.workspace, 'repo', '/'),
                 releaseDir: path.join(rule.workspace, 'releases', '/'),
-                nextReleaseDir: path.join(rule.workspace, 'releases', data.timeStarted, '/')
+                nextReleaseDir: path.join(rule.workspace, 'releases', data.timeStarted, '/'),
+                nextReleaseSubDir: path.join(rule.workspace, 'releases', data.timeStarted, rule.releaseSubdir, '/')
             };
             deployCmdList = deployCmdList.concat(deployInit(deployPaths));
             deployCmdList = deployCmdList.concat(deployCheckout(deployPaths, data));
             deployCmdList = deployCmdList.concat(deployPrepare(deployPaths, rule.deploycommands));
             deployCmdList = deployCmdList.concat(deploySwitch(deployPaths, rule));
         }
-        var syncCommands = deployCmdList.map(function (command) {
+        deployCmdList = deployCmdList.concat(rule.postcommands);
+
+        deployCmdList.map(function (command) {
             console.log(command);
             return execSync(command);
         });
 
-        deployCmdList = deployCmdList.concat(rule.postcommands);
         //
         // var promises = deployCmdList.map(function (command) {
         //     return executeCmd(command);
@@ -75,6 +77,7 @@ commands.rules.forEach(function (rule) {
         //     })
         //     .catch(console.error);
 
+        callback();
     }, 1);
 });
 
@@ -88,6 +91,7 @@ app.listen(app.get('port'));
 app.use(bodyParser.json()); // must use bodyParser in express
 app.use(webhookHandler); // use our middleware
 
+// Now could handle following events
 // Now could handle following events
 webhookHandler.on('*', function (event, repo, data) {
     commands.rules.forEach(function (rule) {
@@ -219,9 +223,9 @@ function deployPrepare(deployPaths, commands) {
 function deploySwitch(deployPaths, rule) {
     let a = [];
     if (fs.existsSync(rule.deployTo)) {
-        a.push("ln -s " + deployPaths.nextReleaseDir + " " + rule.deployTo)
+        a.push("ln -sfn " + deployPaths.nextReleaseSubDir + " " + rule.deployTo)
     } else {
-        a.push("ln -sfn " + deployPaths.nextReleaseDir + " " + rule.deployTo)
+        a.push("ln -s " + deployPaths.nextReleaseSubDir + " " + rule.deployTo)
     }
     return a;
 }

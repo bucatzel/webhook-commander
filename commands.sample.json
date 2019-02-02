@@ -6,6 +6,7 @@
       "reponame": "reponame",
       "workspace": "/tmp/myapp",
       "deployTo": "/var/myapp",
+      "releaseSubdir": "",
       "precommands": [
         "cd /var/log && ls -la",
         "cd /mnt && ls"

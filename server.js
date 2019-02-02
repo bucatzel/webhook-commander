@@ -199,7 +199,7 @@ function deployCheckout(deployPaths, data) {
         if (!fs.existsSync(path.join(deployPaths.repoDir, '.git'))) {
             a.push("git clone " + config.deploy.repository + " " + deployPaths.repoDir);
         }
-        a.push("cd  " + deployPaths.repoDir + " && git checkout " + data.commits[0].id);
+        a.push("cd  " + deployPaths.repoDir + " && git fetch --all && git checkout " + data.commits[0].id);
         a.push("rsync -avh " + config.deploy.exclude.map(function (item) {
             return " --exclude " + item
         }).join(' ') + " " + deployPaths.repoDir + " " + deployPaths.nextReleaseDir);

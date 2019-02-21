@@ -33,7 +33,7 @@ if (config.mail.use) {
 var queueReq = {};
 
 commands.rules.forEach(function (rule) {
-    queueReq[rule.reponame] = async.queue(function (data, callback) {
+    queueReq[rule.reponame+rule.ref] = async.queue(function (data, callback) {
         data.timeStarted = Date.now().toString();
         beforeMsg(data);
         let deployCmdList = rule.precommands;
@@ -98,7 +98,7 @@ webhookHandler.on('*', function (event, repo, data) {
         if (event === rule.event && repo === rule.reponame && data.ref === rule.ref) {
             console.log('Starting event triggered by ' + data.commits[0].author.name);
             data.timeReceived = Date.now();
-            queueReq[rule.reponame].push(data, function (err) {
+            queueReq[rule.reponame+rule.ref].push(data, function (err) {
                 if (err) {
                     console.error("webhookHandler queue error: ", err);
                 }

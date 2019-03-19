@@ -39,8 +39,8 @@ commands.rules.forEach(function (rule) {
         let deployCmdList = rule.precommands;
         if (rule.deploy) {
             let deployPaths = {
-                repoDir: path.join(rule.workspace, 'repo'),
-                releaseDir: path.join(rule.workspace, 'releases'),
+                repoDir: path.join(rule.workspace, 'repo', '/'),
+                releaseDir: path.join(rule.workspace, 'releases', '/'),
                 nextReleaseDir: path.join(rule.workspace, 'releases', data.timeStarted),
                 nextReleaseSubDir: path.join(rule.workspace, 'releases', data.timeStarted, rule.releaseSubdir)
             };

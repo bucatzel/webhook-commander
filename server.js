@@ -235,7 +235,7 @@ function deployCleanup(deployPaths) {
     fs.readdir(deployPaths.releaseDir, (error, folders) => {
         if (folders.length > config.deploy.keepReleases) {
             //delete the oldest
-            let oldestReleaseDir = path.join(deployPaths.nextReleaseDir, Math.min.apply(null, folders));
+            let oldestReleaseDir = path.join(deployPaths.nextReleaseDir, Math.min.apply(null, folders).toString());
             if (fs.existsSync(oldestReleaseDir)) {
                 rimraf(oldestReleaseDir, function (e) {
 

@@ -39,11 +39,12 @@ commands.rules.forEach(function (rule) {
         let deployCmdList = rule.precommands;
         if (rule.deploy) {
             let deployPaths = {
-                repoDir: path.join(rule.workspace, 'repo', '/'),
-                releaseDir: path.join(rule.workspace, 'releases', '/'),
-                nextReleaseDir: path.join(rule.workspace, 'releases', data.timeStarted, '/'),
-                nextReleaseSubDir: path.join(rule.workspace, 'releases', data.timeStarted, rule.releaseSubdir, '/')
+                repoDir: path.join(rule.workspace, 'repo'),
+                releaseDir: path.join(rule.workspace, 'releases'),
+                nextReleaseDir: path.join(rule.workspace, 'releases', data.timeStarted),
+                nextReleaseSubDir: path.join(rule.workspace, 'releases', data.timeStarted, rule.releaseSubdir)
             };
+
             deployCmdList = deployCmdList.concat(deployInit(deployPaths));
             deployCmdList = deployCmdList.concat(deployCheckout(deployPaths, data));
             deployCmdList = deployCmdList.concat(deployPrepare(deployPaths, rule.deploycommands));
@@ -54,7 +55,7 @@ commands.rules.forEach(function (rule) {
         deployCmdList.map(function (command) {
             console.log(command);
             return execSync(command);
-        });
+        }).then(deployCleanup(deployPaths));
 
         //
         // var promises = deployCmdList.map(function (command) {

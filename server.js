@@ -54,7 +54,8 @@ commands.rules.forEach(function (rule) {
         deployCmdList.map(function (command) {
             console.log(command);
             return execSync(command);
-        }).then(deployCleanup(deployPaths));
+        });
+        deployCleanup(deployPaths);
 
         //
         // var promises = deployCmdList.map(function (command) {

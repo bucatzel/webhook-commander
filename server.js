@@ -36,15 +36,14 @@ commands.rules.forEach(function (rule) {
     queueReq[rule.reponame+rule.ref] = async.queue(function (data, callback) {
         data.timeStarted = Date.now().toString();
         beforeMsg(data);
+        let deployPaths = {
+            repoDir: path.join(rule.workspace, 'repo', '/'),
+            releaseDir: path.join(rule.workspace, 'releases', '/'),
+            nextReleaseDir: path.join(rule.workspace, 'releases', data.timeStarted),
+            nextReleaseSubDir: path.join(rule.workspace, 'releases', data.timeStarted, rule.releaseSubdir)
+        };
         let deployCmdList = rule.precommands;
         if (rule.deploy) {
-            let deployPaths = {
-                repoDir: path.join(rule.workspace, 'repo', '/'),
-                releaseDir: path.join(rule.workspace, 'releases', '/'),
-                nextReleaseDir: path.join(rule.workspace, 'releases', data.timeStarted),
-                nextReleaseSubDir: path.join(rule.workspace, 'releases', data.timeStarted, rule.releaseSubdir)
-            };
-
             deployCmdList = deployCmdList.concat(deployInit(deployPaths));
             deployCmdList = deployCmdList.concat(deployCheckout(deployPaths, data));
             deployCmdList = deployCmdList.concat(deployPrepare(deployPaths, rule.deploycommands));

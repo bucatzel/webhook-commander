@@ -97,13 +97,13 @@ app.use(webhookHandler); // use our middleware
 webhookHandler.on('*', function (event, repo, data) {
     commands.rules.forEach(function (rule) {
         if (event === rule.event && repo === rule.reponame && data.ref === rule.ref) {
-            console.log('Starting event triggered by ' + data.commits[0].author.name);
+            console.log('Starting event triggered by ' + data.head_commit.author.name);
             data.timeReceived = Date.now();
             queueReq[rule.reponame+rule.ref].push(data, function (err) {
                 if (err) {
                     console.error("webhookHandler queue error: ", err);
                 }
-                console.log('Finished event triggered by ' + data.commits[0].author.name);
+                console.log('Finished event triggered by ' + data.head_commit.author.name);
             });
         } else {
             console.log("webhookHandler not covered by rules: ", event, repo, data.ref);
@@ -132,10 +132,10 @@ function newrelicMsg(data, message) {
         var args = {
             data: {
                 "deployment": {
-                    "revision": data.commits[0].id,
-                    "changelog": data.commits[0].message,
+                    "revision": data.head_commit.id,
+                    "changelog": data.head_commit.message,
                     "description": message,
-                    "user": data.commits[0].author.name
+                    "user": data.head_commit.author.name
                 }
             },
             headers: {
@@ -159,7 +159,7 @@ function slackMsg(data) {
         slack.webhook({
             channel: config.slack.channel,
             username: config.slack.username,
-            text: "`" + data.commits[0].id.substr(0, 6) + "` by " + data.commits[0].author.name + "\n ```" + data.commits[0].message + "``` processed"
+            text: "`" + data.head_commit.id.substr(0, 6) + "` by " + data.head_commit.author.name + "\n ```" + data.head_commit.message + "``` processed"
         }, function (err, response) {
         });
     }
@@ -167,7 +167,7 @@ function slackMsg(data) {
 
 function skypeMsg(data) {
     if (config.skype.use) {
-        //text: "`" + data.commits[0].id.substr(0,6) + "` by " + data.commits[0].author.name + "\n ```" + data.commits[0].message + "``` processed"
+        //text: "`" + data.head_commit.id.substr(0,6) + "` by " + data.head_commit.author.name + "\n ```" + data.head_commit.message + "``` processed"
     }
 }
 
@@ -177,7 +177,7 @@ function mailMsg(data) {
             from: config.mail.from,
             to: config.mail.to,
             subject: "Message title",
-            text: "`" + data.commits[0].id.substr(0, 6) + "` by " + data.commits[0].author.name + "\n ```" + data.commits[0].message + "``` processed",
+            text: "`" + data.head_commit.id.substr(0, 6) + "` by " + data.head_commit.author.name + "\n ```" + data.head_commit.message + "``` processed",
             html: "<p>HTML version of the message</p>"
         };
         transporter.sendMail(message);
@@ -200,7 +200,7 @@ function deployCheckout(deployPaths, data) {
         if (!fs.existsSync(path.join(deployPaths.repoDir, '.git'))) {
             a.push("git clone " + config.deploy.repository + " " + deployPaths.repoDir);
         }
-        a.push("cd  " + deployPaths.repoDir + " && git fetch --all && git checkout " + data.commits[0].id);
+        a.push("cd  " + deployPaths.repoDir + " && git fetch --all && git checkout " + data.head_commit.id);
         a.push("rsync -avh " + config.deploy.exclude.map(function (item) {
             return " --exclude " + item
         }).join(' ') + " " + deployPaths.repoDir + " " + deployPaths.nextReleaseDir);

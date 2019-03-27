@@ -89,7 +89,7 @@ app.set('port', config.port || 9000);
 app.set('rules', commands.rules || {});
 app.listen(app.get('port'));
 
-app.use(bodyParser.json()); // must use bodyParser in express
+app.use(bodyParser.json({limit: '10mb'})); // must use bodyParser in express
 app.use(webhookHandler); // use our middleware
 
 // Now could handle following events

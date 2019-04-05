@@ -128,7 +128,7 @@ function afterMsg(data) {
 }
 
 function newrelicMsg(data, message) {
-    if (config.newrelic.applicationID.length > 0) {
+    if (config.newrelic.use) {
         var args = {
             data: {
                 "deployment": {
